@@ -38,6 +38,7 @@ class DownloadViewModel @Inject constructor() : ViewModel() {
         val url: String = "",
         val videoTitle: String = "",
         val videoThumbnailUrl: String = "",
+        val progressText: String = "",
         val videoAuthor: String = "",
         val isDownloadError: Boolean = false,
         val errorMessage: String = "",
@@ -117,7 +118,7 @@ class DownloadViewModel @Inject constructor() : ViewModel() {
                     )
                     downloadResultTemp = DownloadUtil.downloadVideo(value.url, videoInfo)
                     { progress, _, line ->
-                        _viewState.update { it.copy(progress = progress) }
+                        _viewState.update { it.copy(progress = progress, progressText = line) }
                         NotificationUtil.updateNotification(
                             notificationID,
                             progress = progress.toInt(),

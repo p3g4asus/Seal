@@ -160,6 +160,7 @@ fun DownloadPage(
                                 videoTitle,
                                 videoAuthor,
                                 videoThumbnailUrl,
+                                progressText,
                                 progress = progress, onClick = { downloadViewModel.openVideoFile() }
                             )
                         }
@@ -274,6 +275,7 @@ fun VideoCard(
     title: String = "videotitle",
     author: String = "author",
     thumbnailUrl: String,
+    progressText: String,
     onClick: () -> Unit,
     progress: Float = 0f
 ) {
@@ -325,6 +327,13 @@ fun VideoCard(
                 text = author,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f), maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                modifier = Modifier.padding(top = 3.dp),
+                text = progressText,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f), maxLines = 3,
                 overflow = TextOverflow.Ellipsis
             )
 
