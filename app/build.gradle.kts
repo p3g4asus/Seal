@@ -143,10 +143,10 @@ dependencies {
     implementation("androidx.room:room-ktx:$roomVersion")
     kapt("androidx.room:room-compiler:$roomVersion")
 
-    implementation ("com.github.yausername.youtubedl-android:library:-SNAPSHOT")
-    implementation ("com.github.yausername.youtubedl-android:ffmpeg:-SNAPSHOT")
-//    implementation("com.github.JunkFood02.youtubedl-android:ffmpeg:0.13.2")
-//    implementation("com.github.JunkFood02.youtubedl-android:library:0.13.2")
+//    implementation "com.github.yausername.youtubedl-android:library:-SNAPSHOT"
+//    implementation "com.github.yausername.youtubedl-android:ffmpeg:-SNAPSHOT"
+    implementation("com.github.p3g4asus.youtubedl-android:ffmpeg:10.13.5")
+    implementation("com.github.p3g4asus.youtubedl-android:library:10.13.5")
 
     implementation("com.tencent:mmkv:1.2.13")
     implementation("androidx.datastore:datastore-preferences:1.0.0")
