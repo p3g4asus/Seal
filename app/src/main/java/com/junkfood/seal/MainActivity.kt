@@ -53,7 +53,12 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStop() {
         mService = null
-        baseContext.unbindService(serviceConnection)
+        try {
+            baseContext.unbindService(serviceConnection)
+        }
+        catch (e: Exception) {
+            e.printStackTrace()
+        }
         super.onStop()
     }
 
@@ -134,7 +139,9 @@ class MainActivity : AppCompatActivity() {
         private fun bindServiceInvoked() {
             if (!isBinding && instance != null && instance!!.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
                 isBinding = true
-                instance!!.baseContext.bindService(Intent(instance!!.baseContext, VideoDownloadService::class.java), serviceConnection, BIND_AUTO_CREATE)
+                val startIntent = Intent(instance!!.baseContext, VideoDownloadService::class.java)
+                instance!!.baseContext.startService(startIntent)
+                instance!!.baseContext.bindService(startIntent, serviceConnection, BIND_AUTO_CREATE)
             }
         }
         fun setLanguage(locale: String) {

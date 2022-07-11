@@ -126,15 +126,16 @@ class VideoDownloadService : Service() {
         }
     }
 
-    private suspend fun downloadVideo(index: Int = 1) {
+    private suspend fun downloadVideo(index: Int = 1): List<String>? {
         with(currentState) {
             val url = value!!.task!!.url
+            var fileNames: List<String>? = null
             lateinit var videoInfo: VideoInfo
             try {
                 videoInfo = DownloadUtilService.fetchVideoInfo(url, index)
             } catch (e: Exception) {
                 manageDownloadError(e)
-                return
+                return ArrayList()
             }
             Log.d(TAG, "downloadVideo: $index" + videoInfo.title)
             postValue(
@@ -193,14 +194,9 @@ class VideoDownloadService : Service() {
                 ) else null
             )
             if (intent != null) {
-                postValue(
-                    value!!.copy(
-                        state = value!!.state.copy(
-                            fileNames = downloadResultTemp.filePath
-                        )
-                    )
-                )
+                fileNames = downloadResultTemp.filePath
             }
+            return fileNames
         }
     }
 
@@ -289,12 +285,13 @@ class VideoDownloadService : Service() {
         }
     }
 
-    private suspend fun downloadVideoInPlaylistByIndexRange() {
+    private suspend fun downloadVideoInPlaylistByIndexRange(): List<String>? {
         with(currentState) {
             val currentTask = value!!.task!!
             val indexRange = IntRange(currentTask.startItem, currentTask.endItem)
             var curIdx = 0
             var itCnt = indexRange.last - indexRange.first + 1
+            var fileNames: List<String>? = null
             postValue(
                 value!!.copy(
                     state = value!!.state.copy(
@@ -310,33 +307,36 @@ class VideoDownloadService : Service() {
                 val st = value!!.state.copy(
                     currentIndex = index - indexRange.first + 1,
                     downloadItemCount = itCnt,
+                    fileNames = if (fileNames!= null) (fileNames.ifEmpty { null }) else value!!.state.fileNames
                 )
                 postValue(
                     value!!.copy(
                         state = st
                     )
                 )
-                downloadVideo(index)
+                fileNames = downloadVideo(index)
                 curIdx = value!!.state.currentIndex
                 itCnt = value!!.state.downloadItemCount
             }
+            return fileNames
         }
     }
 
     private fun startDownloadVideo(task: DownloadTask) {
         serviceScope.launch(Dispatchers.IO) {
+            var fileNames: List<String>? = null
             if (task.settings.isCustom())
                 downloadWithCustomCommands()
             else if (task.settings.downloadPlaylist && task.endItem - task.startItem >= 0 && task.endItem > 0 && task.startItem > 0)
-                downloadVideoInPlaylistByIndexRange()
+                fileNames = downloadVideoInPlaylistByIndexRange()
             else
-                downloadVideo()
-            finishProcessing()
+                fileNames = downloadVideo()
+            finishProcessing(fileNames)
         }
     }
 
-    private fun finishProcessing() {
-        taskProcess(true)
+    private fun finishProcessing(fileNames: List<String>? = null) {
+        taskProcess(true, fileNames)
     }
 
     private fun updateYtDlp(to: Messenger) {
@@ -449,8 +449,9 @@ class VideoDownloadService : Service() {
     }
     private val messenger: Messenger = Messenger(messageHandler)
 
-    fun taskProcess(force: Boolean = false) {
+    fun taskProcess(force: Boolean = false, fileNames: List<String>? = null) {
         with(currentState) {
+            Log.d(TAG, "Filenames $fileNames")
             if (value!!.task == null || force) {
                 val task = mTaskList.poll()
 
@@ -462,7 +463,7 @@ class VideoDownloadService : Service() {
                             progressText = "",
                             downloadItemCount = 0,
                             currentIndex = 0,
-                            fileNames = value!!.state.fileNames
+                            fileNames = if (fileNames!= null) (fileNames.ifEmpty { null }) else value!!.state.fileNames
                         )
                     )
                 )
@@ -573,7 +574,7 @@ class VideoDownloadService : Service() {
         allowServiceStop = allowStop
         // Create an explicit intent for an Activity in your app
         val intentMain = Intent(this, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
         val pendingIntentMain =
             PendingIntent.getActivity(this, 0, intentMain, PendingIntent.FLAG_IMMUTABLE)
